@@ -12,4 +12,11 @@ Build: `python3 src/build.py [p01 p08 ...]` → `out/svg/*.svg` + `out/png/*.png
 
 Page format: viewBox 612 × 792 pt; all art is clipped to the live area (x 45–576, y 36–756 = 0.625 in gutter side, 0.5 in elsewhere). Black #000 on white only; no text in illustrations; Dot appears once per page.
 
-Status: Stage 1 (model sheet) and Stage 2 (benchmark pages 1, 8, 15, 21, 28, 35, 41, 50) done.
+- `src/props.py` — recurring props (teapot, stove, mugs, pancake stack, umbrellas, quilt patches…) so returning objects stay identical.
+- `src/matter.py` — front matter, blank backing page, back matter (Thank you + Dot answer key).
+- `tools/validate.py` — book-level checks (XML, size, B/W, no text, one Dot, margins, solid-black areas, duplicates) → `out/validation.json`.
+- `tools/assemble.py` — builds `out/Cozy-Little-Friends-interior.pdf` (110 pages).
+
+Full rebuild: `python3 src/build.py && python3 src/matter.py && python3 tools/validate.py && python3 tools/assemble.py`
+
+Status: all 50 illustrations done and validated; interior PDF assembled (proof in `out/proof/`).

@@ -13,14 +13,15 @@ if (args[0] === '--pdf') {
   const out = args[1];
   const files = args.slice(2);
   const body = files.map(f => {
-    const svg = readFileSync(f, 'utf8').replace(/<\?xml[^>]*>/, '');
-    return `<div class="pg">${svg}</div>`;
+    const svg = readFileSync(f, 'utf8');
+    return `<div class="pg"><img src="data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}"></div>`;
   }).join('');
   await page.setContent(`<!doctype html><html><head><style>
     @page { size: 8.5in 11in; margin: 0 }
     body { margin: 0 } .pg { width: 8.5in; height: 11in; page-break-after: always; overflow: hidden }
-    .pg svg { display: block; width: 8.5in; height: 11in }
+    .pg img { display: block; width: 8.5in; height: 11in }
   </style></head><body>${body}</body></html>`);
+  await page.waitForTimeout(1500);
   await page.pdf({ path: out, width: '8.5in', height: '11in', printBackground: true });
 } else {
   const outDir = args[0];

@@ -393,7 +393,7 @@ def _eyes(c, mood):
 
 def char(c, x, y, s, arms=None, sit=False, mood="open", head_rot=0,
          head_dx=0, head_dy=0, tail=True, brows=False, wag=False,
-         arms_front=None, behind="", front="", back=False, sweater=None):
+         arms_front=None, behind="", front="", back=False, sweater=None, outfit=None, rot=0):
     """Place friend `c` with feet at page (x, y) and scale s.
 
     arms: (left_angle, right_angle) in degrees, 0 = hanging straight down,
@@ -420,7 +420,7 @@ def char(c, x, y, s, arms=None, sit=False, mood="open", head_rot=0,
         sx, sy = d["sh"][i]
         return f'<use href="#{arm_id}" transform="translate({sx} {sy}) rotate({a})"/>'
 
-    parts = [f'<g transform="translate({x} {y}) scale({s})" stroke-width="{sw}">', behind]
+    parts = [f'<g transform="translate({x} {y}) rotate({rot}) scale({s})" stroke-width="{sw}">', behind]
     if back:
         parts.append(_back_body(c, sit))
     else:
@@ -433,6 +433,10 @@ def char(c, x, y, s, arms=None, sit=False, mood="open", head_rot=0,
             parts.append(f'<use href="#{p}"/>')
             if sweater is not None and p.endswith("-torso"):
                 parts.append(_sweater(c, sweater, s))
+            if outfit is not None and p.endswith("-torso"):
+                parts.append(outfit)
+                if c in ACCESSORY:
+                    parts.append(f'<use href="#{ACCESSORY[c]}"/>')
     for i, side in ((0, "L"), (1, "R")):
         if side not in arms_front:
             parts.append(arm(i))
@@ -469,18 +473,42 @@ def _back_body(c, sit):
     raise ValueError(c)
 
 
-def paw(c, x, y, s, side, angle):
-    """Page coordinates of the paw centre for an arm at `angle`."""
+def paw(c, x, y, s, side, angle, rot=0):
+    """Page coordinates of the paw centre for an arm at `angle` (whole friend rotated by rot)."""
     d = CAST[c]
     sx, sy = d["sh"][0 if side == "L" else 1]
     L = d["arm"][1]
     a = radians(angle)
-    return (x + s * (sx - L * sin(a)), y + s * (sy + L * cos(a)))
+    mx, my = sx - L * sin(a), sy + L * cos(a)
+    r = radians(rot)
+    return (x + s * (mx * cos(r) - my * sin(r)), y + s * (mx * sin(r) + my * cos(r)))
 
 
-def head_pt(c, x, y, s, dx=0, dy=0):
+def head_pt(c, x, y, s, dx=0, dy=0, rot=0):
     hx, hy = CAST[c]["head"]
-    return (x + s * (hx + dx), y + s * (hy + dy))
+    mx, my = hx + dx, hy + dy
+    r = radians(rot)
+    return (x + s * (mx * cos(r) - my * sin(r)), y + s * (mx * sin(r) + my * cos(r)))
+
+
+def apron(c, s, pattern="checks", top_frac=0.42):
+    """Model-unit apron over the lower torso (keeps chest accessories clear)."""
+    x0, y0, x1, y1 = TORSO_BOX[c]
+    yt = y0 + (y1 - y0) * top_frac
+    w = (x1 - x0) * 0.36
+    d = f"M{-w:.1f} {yt:.1f} H{w:.1f} L{w*1.25:.1f} {y1+2:.1f} Q0 {y1+6:.1f} {-w*1.25:.1f} {y1+2:.1f} Z"
+    sw = 1.0 / s
+    if pattern == "checks":
+        st = (x1 - x0) / 8
+        pat = "".join(f"M{x:.1f} {yt-5:.1f} V{y1+8:.1f} " for x in [-w*1.4 + st*k for k in range(12)])
+        pat += "".join(f"M{-w*1.4:.1f} {y:.1f} H{w*1.4:.1f} " for y in [yt + st*k for k in range(1, 8)])
+    else:
+        pat = ""
+    k = f"ap-{c}-{abs(hash((pattern, round(s, 3)))) % 10**6}"
+    return (f'<clipPath id="{k}"><path d="{d}"/></clipPath><path d="{d}" stroke-width="{1.4/s:.2f}"/>'
+            f'<g clip-path="url(#{k})" fill="none"><path d="{pat}" stroke-width="{sw*0.85:.2f}"/></g>'
+            f'<path d="{d}" fill="none" stroke-width="{1.4/s:.2f}"/>'
+            f'<path d="M{-w*0.6:.1f} {yt+ (y1-yt)*0.35:.1f} H{w*0.6:.1f} V{yt+(y1-yt)*0.7:.1f} H{-w*0.6:.1f} Z" stroke-width="{sw:.2f}"/>')
 
 
 def dot(x, y, s=1.0, flip=False, sleep=False, rot=0):
@@ -515,15 +543,16 @@ def page(body, title="", frame=True, extra_defs=""):
 """
 
 
-def arms_only(c, x, y, s, arms):
-    """Just the arms of friend c (for arms that reach out of a clipped view)."""
+def arms_only(c, x, y, s, arms, rot=0, sleeve=False):
+    """Just the arms of friend c (for arms that reach out of a clipped view or over props)."""
     d = CAST[c]
     sw = round(OUTLINE_PT / s, 3)
-    out = [f'<g transform="translate({x} {y}) scale({s})" stroke-width="{sw}">']
+    aid = f"{c}-sleeve" if sleeve else d["arm"][0]
+    out = [f'<g transform="translate({x} {y}) rotate({rot}) scale({s})" stroke-width="{sw}">']
     for i in (0, 1):
         if arms[i] is None:
             continue
         sx, sy = d["sh"][i]
-        out.append(f'<use href="#{d["arm"][0]}" transform="translate({sx} {sy}) rotate({arms[i]})"/>')
+        out.append(f'<use href="#{aid}" transform="translate({sx} {sy}) rotate({arms[i]})"/>')
     out.append("</g>")
     return "".join(out)
