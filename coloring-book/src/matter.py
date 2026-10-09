@@ -55,6 +55,7 @@ def title_page():
     for c, x, y, s in cast:
         b.append(char(c, x, y, s, mood="happy" if c in ("cl", "br", "pi") else "open"))
     b.append(dot(306, 300, 1.4))
+    b.append(txt(306, 352, "by Bookshelf", 20, "400", style="italic"))
     b.append(txt(306, 700, "Fifty gentle pages from one year in Honeyfern Hollow", 15, style="italic"))
     return wrap("".join(b), "Title page")
 
@@ -64,14 +65,13 @@ def copyright_page():
     y = 520
     for k, line in enumerate((
             "Cozy Little Friends: A Cute &amp; Cozy Coloring Book for Relaxation",
-            "Copyright © 2026 [AUTHOR / PUBLISHER NAME]. All rights reserved.",
+            "Copyright © 2026 Bookshelf. All rights reserved.",
             "",
             "No part of this book may be reproduced, stored or transmitted in any form",
             "without written permission from the publisher, except that the owner of",
             "this copy may color and photocopy its pages for personal, non-commercial use.",
             "",
             "Characters, setting and illustrations are original to this book.",
-            "ISBN [OPTIONAL — KDP can assign one]",
             "First edition",
             "",
             "Printed single-sided: place a spare sheet behind the page you are coloring",
