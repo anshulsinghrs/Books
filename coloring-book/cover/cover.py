@@ -274,17 +274,20 @@ def T(s, x, y, size, font="fredoka", wght=600, fill=FOREST, anchor="middle", tra
 
 
 # ------------------------------------------------------------------ pieces
-def sky():
-    return (f'<rect x="-20" y="-20" width="{W+40}" height="{H+40}" fill="url(#sky)" stroke="none"/>'
-            '<use href="#cloud" transform="translate(70 318) scale(0.9)" fill="#fff" stroke="#fff" stroke-width="1"/>'
+def clouds():
+    return ('<use href="#cloud" transform="translate(70 318) scale(0.9)" fill="#fff" stroke="#fff" stroke-width="1"/>'
             '<use href="#cloud" transform="translate(452 300) scale(0.6)" fill="#fff" stroke="#fff" stroke-width="1"/>')
 
 
-def hills():
+def sky():
+    return f'<rect x="-20" y="-20" width="{W+40}" height="{H+40}" fill="url(#sky)" stroke="none"/>' + clouds()
+
+
+def hills(distant=True):
     b = [P("M-20 524 C90 486 170 500 250 510 C340 520 420 470 520 474 C560 476 600 486 632 496 V812 H-20 Z", "#B9D1AE", 1.4),
          P("M-20 563 C120 540 260 566 380 552 C470 542 550 530 632 540 V812 H-20 Z", GRASS, 1.5)]
     # distant cottages of the Hollow, tiny
-    for x, y in ((470, 480), (505, 476)):
+    for x, y in () if not distant else ((470, 480), (505, 476)):
         b.append(P(f"M{x-8} {y} V{y-9} L{x} {y-16} L{x+8} {y-9} V{y} Z", IVORY, 1.0))
         b.append(P(f"M{x-10} {y-8} L{x} {y-18} L{x+10} {y-8}", sw=1.0, extra=f' stroke="{TERRA_D}"'))
     return "".join(b)
@@ -541,10 +544,11 @@ def font_face():
     return "<style>" + "".join(css) + "</style>"
 
 
-def build(editable=False, bleed=False):
+def front_layers(editable=False, background=True):
+    """The front-cover art (page units, 0..612 x 0..792) as layered groups."""
     chars.OUTLINE_PT = 1.7
     body = [
-        f'<g id="background">{sky()}{hills()}</g>',
+        f'<g id="background">{sky()}{hills()}</g>' if background else f'<g id="front-clouds">{clouds()}</g>',
         f'<g id="scenery">{blossom_tree()}{autumn_tree()}{cottage()}{sunflowers()}{bench_and_quilt()}{stones()}'
         f'{tufts([(110, 610), (270, 618), (420, 660), (40, 640), (590, 660), (300, 690)])}</g>',
         # Dot, tucked beside the chimney smoke
@@ -556,11 +560,19 @@ def build(editable=False, bleed=False):
         f'<g id="badge">{badge(editable)}</g>',
         f'<g id="type">{text_block(editable)}</g>',
     ]
-    defs = colour_defs()
-    grad = (f'<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">'
+    return "".join(body)
+
+
+def sky_gradient():
+    return (f'<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">'
             f'<stop offset="0" stop-color="{CREAM}"/><stop offset="0.3" stop-color="#F3F1E6"/>'
-            f'<stop offset="0.6" stop-color="#D5E6EF"/><stop offset="1" stop-color="#D5E6EF"/></linearGradient>'
-            + (font_face() if editable else "") + '</defs>')
+            f'<stop offset="0.6" stop-color="#D5E6EF"/><stop offset="1" stop-color="#D5E6EF"/></linearGradient>')
+
+
+def build(editable=False, bleed=False):
+    body = [front_layers(editable)]
+    defs = colour_defs()
+    grad = '<defs>' + sky_gradient() + (font_face() if editable else "") + '</defs>'
     title = "Cozy Little Friends: A Cute &amp; Cozy Coloring Book for Relaxation — Volume 1 front cover"
     if bleed:
         b = 9  # 0.125 in

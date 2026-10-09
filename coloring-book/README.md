@@ -30,6 +30,12 @@ Status: all 50 illustrations done and validated; interior PDF assembled (proof i
 - `cover/out/cover-front-v1.png` — 2550 × 3300 px (300 DPI).
 - `cover/qc_cover.mjs` — checks that type, badge, friends and Dot sit inside the 0.375 in safe area.
 
-Not included yet: the spine and back cover, and the full KDP wrap. These need the final page count and paper type, which set the spine width. Barcode area, ISBN and copyright are also not on the front cover by design.
+Full wrap (back + spine + front): `python3 cover/wrap.py`.
+- Output: `cover/out/cover-wrap-v1.svg`, `.pdf` and `.png`.
+- The PDF is the KDP upload file: 17.4977 × 11.25 in, vector, 0.125 in bleed.
+- PDF export: `node cover/render_cover.mjs --pdf in.svg out.pdf`, then `python3 cover/fix_pdf_size.py out.pdf 17.4977 11.25`, because Chromium rounds the page size.
+- Spine: 110 pages × 0.002252 in (white paper, black-and-white interior) = 0.2477 in. Change `PAGES` or `PAPER` in `wrap.py` if the interior or paper changes.
+- The back cover's bottom-right 2 × 1.2 in area is left clear for KDP's barcode.
+- `cover-wrap-v1-guides.*` shows trim, spine folds, safe areas and the barcode box. It is a proof only, not for print.
 
 Series kit for Volumes 2 and 3: the two-tone Fredoka title lock-up, the stitched sage "VOLUME n" tab, the honey "50 Coloring Illustrations" rosette, the quilt-patch strip with BOOKSHELF beneath it, and the stitched cream border.
